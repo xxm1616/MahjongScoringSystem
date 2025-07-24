@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麻神理工比赛积分管理系统</title>
+    <meta name="description" content="专业的麻将比赛管理与排名系统，支持4-8人比赛，实时排名统计">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ffa500);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-50%, -50%) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 18px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            color: #495057;
+        }
+
+        .nav-btn:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: #007bff;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+
+        .nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid white;
+        }
+
+        .content {
+            padding: 40px;
+            min-height: 500px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section h2 {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            transition: all 0.6s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+
+        .participant-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .participant-card {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            padding: 25px;
+            border-radius: 18px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .participant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .participant-card:hover::before {
+            left: 100%;
+        }
+
+        .participant-card:hover {
+            border-color: #007bff;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .participant-card h4 {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .participant-card p {
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .game-form {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            padding: 35px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 2px solid #dee2e6;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .player-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .player-count-badge {
+            background: linear-gradient(135deg, #6f42c1, #e83e8c);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .game-history {
+            margin-top: 30px;
+        }
+
+        .game-record {
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .game-record:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .game-record h4 {
+            color: #007bff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .game-record p {
+            font-size: 1.1em;
+            color: #495057;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .ranking-table th, .ranking-table td {
+            padding: 18px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .ranking-table th {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-weight: 600;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ranking-table tr:hover {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        }
+
+        .rank-1 { color: #ffd700; font-weight: bold; font-size: 1.2em; }
+        .rank-2 { color: #c0c0c0; font-weight: bold; font-size: 1.1em; }
+        .rank-3 { color: #cd7f32; font-weight: bold; font-size: 1.1em; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .stats-card h3 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stats-card p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .alert {
+            padding: 18px 25px;
+            margin: 20px 0;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 1.1em;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alert::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: currentColor;
+        }
+
+        .alert-success {
+            background: linear-gradient(145deg, #d4edda, #c3e6cb);
+            color: #155724;
+        }
+
+        .alert-error {
+            background: linear-gradient(145deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+        }
+
+        .password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .password-dialog {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            min-width: 350px;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .password-modal[style*="flex"] .password-dialog {
+            transform: scale(1);
+        }
+
+        .password-dialog h3 {
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 1.6em;
+        }
+
+        .password-dialog input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 18px;
+            margin-bottom: 25px;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .password-dialog .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .password-dialog .btn {
+            flex: 1;
+            max-width: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .content {
+                padding: 25px;
+            }
+
+            .nav {
+                flex-direction: column;
+            }
+
+            .nav-btn {
+                padding: 15px;
+            }
+
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .participant-list {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .player-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .ranking-table {
+                font-size: 0.9em;
+            }
+
+            .ranking-table th, .ranking-table td {
+                padding: 12px 8px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🀄 麻神理工比赛积分管理系统</h1>
+            <p>专业的麻将比赛管理与实时排名统计平台</p>
+        </div>
+
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showSection('participants')">
+                👥 参与者管理
+            </button>
+            <button class="nav-btn" onclick="showSection('game')">
+                🎮 录入比赛
+            </button>
+            <button class="nav-btn" onclick="showSection('ranking')">
+                🏆 实时排名
+            </button>
+            <button class="nav-btn" onclick="showSection('history')">
+                📊 历史记录
+            </button>
+        </nav>
+
+        <main class="content">
+            <!-- 参与者管理 -->
+            <section id="participants" class="section active">
+                <h2>参与者管理</h2>
+                <div class="form-group">
+                    <label for="playerName">
+                        <i>📝</i> 添加新参与者
+                    </label>
+                    <input type="text" id="playerName" placeholder="请输入参与者姓名" maxlength="20">
+                </div>
+                <button class="btn" onclick="addParticipant()">
+                    ➕ 添加参与者
+                </button>
+                <div id="participantsList" class="participant-list"></div>
+            </section>
+
+            <!-- 录入比赛 -->
+            <section id="game" class="section">
+                <h2>录入比赛结果</h2>
+                <div class="game-form">
+                    <div class="form-group">
+                        <label for="gameDate">
+                            📅 比赛日期
+                        </label>
+                        <input type="date" id="gameDate">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            👥 参与人数设置
+                        </label>
+                        <div class="player-count-badge">
+                            当前参与人数: <span id="playerCount">4</span> 人
+                        </div>
+                        <div class="player-controls">
+                            <button type="button" class="btn" onclick="addGamePlayer()">
+                                ➕ 添加玩家
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="removeGamePlayer()">
+                                ➖ 移除玩家
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="playersContainer" class="players-grid">
+                        <!-- 动态生成的玩家选择框 -->
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="btn" onclick="recordGame()" style="font-size: 1.2em; padding: 18px 40px;">
+                            🎯 记录比赛结果
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 实时排名 -->
+            <section id="ranking" class="section">
+                <h2>实时排名统计</h2>
+                <div class="form-group">
+                    <label for="yearFilter">
+                        📈 筛选年份
+                    </label>
+                    <select id="yearFilter" onchange="updateRanking()">
+                        <option value="all">📊 全部年份统计</option>
+                    </select>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <h3 id="totalGames">0</h3>
+                        <p>🎮 总比赛场次</p>
+                    </div>
+                    <div class="stats-card">
+                        <h3 id="totalParticipants">0</h3>
+                        <p>👥 参与总人数</p>
+                    </div>
+                </div>
+                
+                <table id="rankingTable" class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>🏆 排名</th>
+                            <th>👤 姓名</th>
+                            <th>📊 总积分</th>
+                            <th>🎯 参赛次数</th>
+                            <th>🎖️ 胜率</th>
+                            <th>📈 平均分</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+
+            <!-- 历史记录 -->
+            <section id="history" class="section">
+                <h2>比赛历史记录</h2>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <button class="btn" onclick="exportData()">
+                        📤 导出数据备份
+                    </button>
+                    <button class="btn" onclick="document.getElementById('importFile').click()">
+                        📥 导入数据备份
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                    <button class="btn btn-danger" id="clearAllBtn">
+                        🗑️ 清空所有数据
+                    </button>
+                </div>
+                <div id="gameHistory" class="game-history"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 密码验证弹窗 -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-dialog">
+            <h3>🔐 管理员身份验证</h3>
+            <input type="password" id="passwordInput" placeholder="请输入管理员密码" maxlength="10">
+            <div class="btn-group">
+                <button class="btn" onclick="confirmPassword()">✅ 确认</button>
+                <button class="btn btn-danger" onclick="cancelPassword()">❌ 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="confirmModal" class="password-modal">
+        <div class="password-dialog">
+            <h3 id="confirmTitle">⚠️ 确认操作</h3>
+            <p id="confirmMessage">确定要执行此操作吗？</p>
+            <div class="btn-group">
+                <button class="btn" onclick="confirmDelete()">✅ 确定</button>
+                <button class="btn btn-danger" onclick="cancelDelete()">❌ 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 麻神理工比赛积分管理系统 v2.0
+         * 支持4-8人麻将比赛，实时排名统计
+         * 管理员密码: 970508
+         */
+
+        // ==================== 全局变量 ====================
+        var participants = [];      // 参与者数据
+        var games = [];            // 比赛记录数据
+        var pendingAction = null;  // 待执行的密码验证操作
+        var pendingActionData = null;
+        var gamePlayerCount = 4;   // 当前比赛参与人数
+        var confirmCallback = null; // 确认对话框回调
+        var confirmData = null;
+
+        // ==================== 动态玩家管理 ====================
+        
+        /**
+         * 增加比赛玩家数量
+         */
+        function addGamePlayer() {
+            if (gamePlayerCount < 8) {
+                gamePlayerCount++;
+                updatePlayerCount();
+                generateGamePlayerInputs();
+                updateGamePlayerSelects();
+            } else {
+                showAlert('⚠️ 最多支持8位玩家参与比赛', 'error');
+            }
+        }
+
+        /**
+         * 减少比赛玩家数量
+         */
+        function removeGamePlayer() {
+            if (gamePlayerCount > 4) {
+                gamePlayerCount--;
+                updatePlayerCount();
+                generateGamePlayerInputs();
+                updateGamePlayerSelects();
+            } else {
+                showAlert('⚠️ 至少需要4位玩家参与比赛', 'error');
+            }
+        }
+
+        /**
+         * 更新显示的玩家数量
+         */
+        function updatePlayerCount() {
+            var countElement = document.getElementById('playerCount');
+            if (countElement) {
+                countElement.textContent = gamePlayerCount;
+            }
+        }
+
+        /**
+         * 动态生成玩家输入框
+         */
+        function generateGamePlayerInputs() {
+            var container = document.getElementById('playersContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            for (var i = 1; i <= gamePlayerCount; i++) {
+                var playerDiv = document.createElement('div');
+                playerDiv.className = 'form-group';
+                playerDiv.innerHTML = 
+                    '<label>🎯 玩家 ' + i + '</label>' +
+                    '<select id="player' + i + '" aria-label="选择玩家' + i + '"></select>' +
+                    '<input type="number" id="score' + i + '" placeholder="输入积分" step="1" aria-label="玩家' + i + '积分">';
+                container.appendChild(playerDiv);
+            }
+        }
+
+        /**
+         * 更新所有玩家选择下拉框
+         */
+        function updateGamePlayerSelects() {
+            for (var i = 1; i <= gamePlayerCount; i++) {
+                var select = document.getElementById('player' + i);
+                if (select) {
+                    select.innerHTML = '<option value="">🤔 请选择玩家</option>';
+                    for (var j = 0; j < participants.length; j++) {
+                        var participant = participants[j];
+                        var option = document.createElement('option');
+                        option.value = participant.id;
+                        option.textContent = participant.name;
+                        select.appendChild(option);
+                    }
+                }
+            }
+        }
+
+        // ==================== 安全验证系统 ====================
+        
+        /**
+         * 显示密码验证对话框
+         */
+        function showPasswordDialog(callback, data) {
+            pendingAction = callback;
+            pendingActionData = data || null;
+            var modal = document.getElementById('passwordModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                var passwordInput = document.getElementById('passwordInput');
+                if (passwordInput) {
+                    setTimeout(function() {
+                        passwordInput.focus();
+                    }, 100);
+                }
+            }
+        }
+
+        /**
+         * 确认密码
+         */
+        function confirmPassword() {
+            var password = document.getElementById('passwordInput').value;
+            if (password === '970508') {
+                document.getElementById('passwordModal').style.display = 'none';
+                document.getElementById('passwordInput').value = '';
+                if (pendingAction) {
+                    pendingAction(pendingActionData);
+                }
+                pendingAction = null;
+                pendingActionData = null;
+            } else {
+                showAlert('🚫 密码错误，无权限进行此操作', 'error');
+                document.getElementById('passwordInput').value = '';
+                setTimeout(function() {
+                    document.getElementById('passwordInput').focus();
+                }, 100);
+            }
+        }
+
+        /**
+         * 取消密码验证
+         */
+        function cancelPassword() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('passwordInput').value = '';
+            pendingAction = null;
+            pendingActionData = null;
+        }
+
+        /**
+         * 显示确认删除对话框
+         */
+        function showConfirmDialog(title, message, callback, data) {
+            confirmCallback = callback;
+            confirmData = data || null;
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        /**
+         * 确认删除操作
+         */
+        function confirmDelete() {
+            document.getElementById('confirmModal').style.display = 'none';
+            if (confirmCallback) {
+                confirmCallback(confirmData);
+            }
+            confirmCallback = null;
+            confirmData = null;
+        }
+
+        /**
+         * 取消删除操作
+         */
+        function cancelDelete() {
+            document.getElementById('confirmModal').style.display = 'none';
+            confirmCallback = null;
+            confirmData = null;
+        }
+
+        // ==================== 数据管理 ====================
+        
+        /**
+         * 删除参与者
+         */
+        function removeParticipant(id) {
+            showConfirmDialog(
+                '🗑️ 删除参与者',
+                '确定要删除这个参与者吗？相关比赛记录也会被删除。',
+                function(participantId) {
+                    participants = participants.filter(function(p) { return p.id !== participantId; });
+                    games = games.filter(function(game) { 
+                        return !game.players.some(function(player) { return player.id == participantId; });
+                    });
+                    saveData();
+                    updateParticipantsList();
+                    updateGamePlayerSelects();
+                    updateRanking();
+                    updateGameHistory();
+                    showAlert('✅ 参与者删除成功', 'success');
+                },
+                id
+            );
+        }
+        
+        /**
+         * 删除比赛记录
+         */
+        function deleteGame(gameId) {
+            showConfirmDialog(
+                '🗑️ 删除比赛记录',
+                '确定要删除这条比赛记录吗？',
+                function(id) {
+                    var game = games.find(function(g) { return g.id === id; });
+                    if (game) {
+                        // 恢复参与者统计数据
+                        game.players.forEach(function(player) {
+                            var participant = participants.find(function(p) { return p.id === player.id; });
+                            if (participant) {
+                                participant.totalScore -= player.score;
+                                participant.gamesPlayed--;
+                                if (player.score > 0) {
+                                    participant.wins--;
+                                }
+                            }
+                        });
+                    }
+                    games = games.filter(function(g) { return g.id !== id; });
+                    saveData();
+                    updateParticipantsList();
+                    updateRanking();
+                    updateGameHistory();
+                    updateYearFilter();
+                    showAlert('✅ 比赛记录删除成功', 'success');
+                },
+                gameId
+            );
+        }
+        
+        /**
+         * 清空所有数据
+         */
+        function clearAllData() {
+            showConfirmDialog(
+                '🗑️ 清空所有数据',
+                '⚠️ 确定要清空所有数据吗？此操作不可恢复！',
+                function() {
+                    participants = [];
+                    games = [];
+                    saveData();
+                    updateParticipantsList();
+                    updateGamePlayerSelects();
+                    updateRanking();
+                    updateGameHistory();
+                    updateYearFilter();
+                    showAlert('✅ 所有数据已清空', 'success');
+                }
+            );
+        }
+
+        // ==================== 页面功能 ====================
+        
+        /**
+         * 切换功能区域
+         */
+        function showSection(sectionName) {
+            var sections = document.querySelectorAll('.section');
+            var buttons = document.querySelectorAll('.nav-btn');
+            
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active');
+            }
+            for (var i = 0; i < buttons.length; i++) {
+                buttons[i].classList.remove('active');
+            }
+            
+            document.getElementById(sectionName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // 特定页面的更新操作
+            if (sectionName === 'ranking') {
+                updateRanking();
+            } else if (sectionName === 'history') {
+                updateGameHistory();
+            }
+        }
+
+        /**
+         * 添加参与者
+         */
+        function addParticipant() {
+            var nameInput = document.getElementById('playerName');
+            var name = nameInput.value.trim();
+            
+            if (!name) {
+                showAlert('📝 请输入参与者姓名', 'error');
+                return;
+            }
+            
+            if (participants.find(function(p) { return p.name === name; })) {
+                showAlert('⚠️ 该参与者已存在', 'error');
+                return;
+            }
+            
+            if (participants.length >= 20) {
+                showAlert('⚠️ 参与者人数不能超过20人', 'error');
+                return;
+            }
+            
+            participants.push({
+                id: Date.now(),
+                name: name,
+                totalScore: 0,
+                gamesPlayed: 0,
+                wins: 0
+            });
+            
+            nameInput.value = '';
+            saveData();
+            updateParticipantsList();
+            updateGamePlayerSelects();
+            showAlert('✅ ' + name + ' 添加成功', 'success');
+        }
+
+        /**
+         * 更新参与者列表显示
+         */
+        function updateParticipantsList() {
+            var container = document.getElementById('participantsList');
+            container.innerHTML = '';
+            
+            if (participants.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 40px;">暂无参与者，请先添加参与者</div>';
+                return;
+            }
+            
+            for (var i = 0; i < participants.length; i++) {
+                var participant = participants[i];
+                var card = document.createElement('div');
+                card.className = 'participant-card';
+                card.innerHTML = 
+                    '<h4>👤 ' + participant.name + '</h4>' +
+                    '<p>📊 总积分: <strong>' + participant.totalScore + '</strong></p>' +
+                    '<p>🎯 参赛次数: <strong>' + participant.gamesPlayed + '</strong> 次</p>' +
+                    '<p>🏆 胜率: <strong>' + (participant.gamesPlayed > 0 ? ((participant.wins / participant.gamesPlayed) * 100).toFixed(1) : '0.0') + '%</strong></p>';
+                
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.innerHTML = '🗑️ 删除';
+                deleteBtn.onclick = (function(id) {
+                    return function() {
+                        showPasswordDialog(removeParticipant, id);
+                    };
+                })(participant.id);
+                
+                card.appendChild(deleteBtn);
+                container.appendChild(card);
+            }
+        }
+
+        /**
+         * 记录比赛结果
+         */
+        function recordGame() {
+            var date = document.getElementById('gameDate').value;
+            if (!date) {
+                showAlert('📅 请选择比赛日期', 'error');
+                return;
+            }
+            
+            var players = [];
+            var scores = [];
+            
+            // 验证玩家选择和分数输入
+            for (var i = 1; i <= gamePlayerCount; i++) {
+                var playerId = document.getElementById('player' + i).value;
+                var scoreInput = document.getElementById('score' + i).value;
+                
+                if (!playerId) {
+                    showAlert('🤔 请选择玩家 ' + i, 'error');
+                    return;
+                }
+                
+                if (!scoreInput || scoreInput.trim() === '') {
+                    showAlert('📊 请输入玩家 ' + i + ' 的积分', 'error');
+                    return;
+                }
+                
+                var score = parseInt(scoreInput);
+                
+                if (isNaN(score)) {
+                    showAlert('🔢 玩家 ' + i + ' 的积分必须是整数', 'error');
+                    return;
+                }
+                
+                if (score !== parseFloat(scoreInput)) {
+                    showAlert('🔢 玩家 ' + i + ' 的积分必须是整数', 'error');
+                    return;
+                }
+                
+                if (players.find(function(p) { return p.id == playerId; })) {
+                    showAlert('⚠️ 不能选择相同的玩家', 'error');
+                    return;
+                }
+                
+                var participant = participants.find(function(p) { return p.id == playerId; });
+                players.push({
+                    id: parseInt(playerId),
+                    name: participant.name,
+                    score: score
+                });
+                scores.push(score);
+            }
+            
+            // 验证积分总和
+            var totalScore = scores.reduce(function(sum, score) { return sum + score; }, 0);
+            if (totalScore !== 0) {
+                showAlert('⚖️ 积分总和必须为0，当前总和为 ' + totalScore, 'error');
+                return;
+            }
+            
+            // 创建比赛记录
+            var game = {
+                id: Date.now(),
+                date: date,
+                players: players
+            };
+            
+            games.push(game);
+            
+            // 更新参与者统计
+            players.forEach(function(player) {
+                var participant = participants.find(function(p) { return p.id === player.id; });
+                participant.totalScore += player.score;
+                participant.gamesPlayed++;
+                if (player.score > 0) {
+                    participant.wins++;
+                }
+            });
+            
+            // 清空表单
+            for (var i = 1; i <= gamePlayerCount; i++) {
+                document.getElementById('player' + i).value = '';
+                document.getElementById('score' + i).value = '';
+            }
+            
+            saveData();
+            updateParticipantsList();
+            updateYearFilter();
+            showAlert('🎉 比赛记录成功！', 'success');
+        }
+
+        /**
+         * 更新年份筛选器
+         */
+        function updateYearFilter() {
+            var yearFilter = document.getElementById('yearFilter');
+            var currentOptions = Array.from(yearFilter.options).map(function(option) { return option.value; });
+            
+            var years = [];
+            for (var i = 0; i < games.length; i++) {
+                var year = new Date(games[i].date).getFullYear();
+                if (years.indexOf(year) === -1) {
+                    years.push(year);
+                }
+            }
+            years.sort(function(a, b) { return b - a; });
+            
+            for (var i = 0; i < years.length; i++) {
+                var year = years[i];
+                if (currentOptions.indexOf(year.toString()) === -1) {
+                    var option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = '📈 ' + year + ' 年统计';
+                    yearFilter.appendChild(option);
+                }
+            }
+        }
+
+        /**
+         * 更新排名显示
+         */
+        function updateRanking() {
+            var selectedYear = document.getElementById('yearFilter').value;
+            
+            // 根据年份筛选比赛
+            var filteredGames = games;
+            if (selectedYear !== 'all') {
+                filteredGames = games.filter(function(game) { 
+                    return new Date(game.date).getFullYear() == selectedYear; 
+                });
+            }
+            
+            // 更新统计数据
+            document.getElementById('totalGames').textContent = filteredGames.length;
+            document.getElementById('totalParticipants').textContent = participants.length;
+            
+            // 计算排名统计
+            var participantStats = {};
+            for (var i = 0; i < participants.length; i++) {
+                var participant = participants[i];
+                participantStats[participant.id] = {
+                    id: participant.id,
+                    name: participant.name,
+                    totalScore: 0,
+                    gamesPlayed: 0,
+                    wins: 0
+                };
+            }
+            
+            // 统计筛选后的数据
+            for (var i = 0; i < filteredGames.length; i++) {
+                var game = filteredGames[i];
+                for (var j = 0; j < game.players.length; j++) {
+                    var player = game.players[j];
+                    if (participantStats[player.id]) {
+                        participantStats[player.id].totalScore += player.score;
+                        participantStats[player.id].gamesPlayed++;
+                        if (player.score > 0) {
+                            participantStats[player.id].wins++;
+                        }
+                    }
+                }
+            }
+            
+            // 更新排名表格
+            var tbody = document.querySelector('#rankingTable tbody');
+            tbody.innerHTML = '';
+            
+            var sortedParticipants = Object.values(participantStats)
+                .filter(function(p) { return p.gamesPlayed > 0; })
+                .sort(function(a, b) { return b.totalScore - a.totalScore; });
+            
+            if (sortedParticipants.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #6c757d; padding: 40px;">暂无排名数据</td></tr>';
+                return;
+            }
+            
+            for (var i = 0; i < sortedParticipants.length; i++) {
+                var participant = sortedParticipants[i];
+                var winRate = participant.gamesPlayed > 0 ? 
+                    ((participant.wins / participant.gamesPlayed) * 100).toFixed(1) : '0.0';
+                var avgScore = participant.gamesPlayed > 0 ? 
+                    (participant.totalScore / participant.gamesPlayed).toFixed(1) : '0.0';
+                
+                var row = tbody.insertRow();
+                var rankClass = i < 3 ? 'rank-' + (i + 1) : '';
+                var rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+                
+                row.innerHTML = 
+                    '<td class="' + rankClass + '">' + rankIcon + '</td>' +
+                    '<td>' + participant.name + '</td>' +
+                    '<td><strong>' + participant.totalScore + '</strong></td>' +
+                    '<td>' + participant.gamesPlayed + '</td>' +
+                    '<td>' + winRate + '%</td>' +
+                    '<td>' + avgScore + '</td>';
+            }
+        }
+
+        /**
+         * 更新历史记录显示
+         */
+        function updateGameHistory() {
+            var container = document.getElementById('gameHistory');
+            container.innerHTML = '';
+            
+            if (games.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 40px;">暂无比赛记录</div>';
+                return;
+            }
+            
+            var sortedGames = games.slice().sort(function(a, b) { 
+                return new Date(b.date) - new Date(a.date); 
+            });
+            
+            for (var i = 0; i < sortedGames.length; i++) {
+                var game = sortedGames[i];
+                var gameDiv = document.createElement('div');
+                gameDiv.className = 'game-record';
+                
+                var playersHtml = game.players
+                    .slice()
+                    .sort(function(a, b) { return b.score - a.score; })
+                    .map(function(player) { 
+                        var scoreColor = player.score > 0 ? 'color: #28a745' : player.score < 0 ? 'color: #dc3545' : 'color: #6c757d';
+                        return '<span style="' + scoreColor + '">' + player.name + ': ' + (player.score > 0 ? '+' : '') + player.score + '</span>'; 
+                    })
+                    .join(' | ');
+                
+                gameDiv.innerHTML = 
+                    '<h4>📅 ' + game.date + ' (' + game.players.length + '人局)</h4>' +
+                    '<p style="margin-bottom: 15px;">' + playersHtml + '</p>';
+                
+                var deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-danger';
+                deleteBtn.innerHTML = '🗑️ 删除记录';
+                deleteBtn.onclick = (function(id) {
+                    return function() {
+                        showPasswordDialog(deleteGame, id);
+                    };
+                })(game.id);
+                
+                gameDiv.appendChild(deleteBtn);
+                container.appendChild(gameDiv);
+            }
+        }
+
+        /**
+         * 数据持久化 - 保存到本地存储
+         */
+        function saveData() {
+            try {
+                localStorage.setItem('mahjong_participants', JSON.stringify(participants));
+                localStorage.setItem('mahjong_games', JSON.stringify(games));
+                localStorage.setItem('mahjong_backup_time', new Date().toISOString());
+            } catch (e) {
+                // 本地存储不可用时的备用方案
+            }
+        }
+
+        /**
+         * 数据加载 - 从本地存储读取
+         */
+        function loadData() {
+            try {
+                var savedParticipants = localStorage.getItem('mahjong_participants');
+                var savedGames = localStorage.getItem('mahjong_games');
+                
+                if (savedParticipants) {
+                    participants = JSON.parse(savedParticipants);
+                }
+                if (savedGames) {
+                    games = JSON.parse(savedGames);
+                }
+            } catch (e) {
+                // 数据解析失败时的备用方案
+                participants = [];
+                games = [];
+            }
+        }
+
+        /**
+         * 导出数据备份
+         */
+        function exportData() {
+            try {
+                var backupData = {
+                    version: '2.0',
+                    exportTime: new Date().toISOString(),
+                    participants: participants,
+                    games: games,
+                    statistics: {
+                        totalParticipants: participants.length,
+                        totalGames: games.length,
+                        dateRange: games.length > 0 ? {
+                            earliest: Math.min.apply(Math, games.map(function(g) { return new Date(g.date).getTime(); })),
+                            latest: Math.max.apply(Math, games.map(function(g) { return new Date(g.date).getTime(); }))
+                        } : null
+                    }
+                };
+
+                var dataStr = JSON.stringify(backupData, null, 2);
+                var dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                var link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = '麻神理工比赛数据备份_' + new Date().toISOString().split('T')[0] + '.json';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert('📤 数据备份导出成功！', 'success');
+            } catch (e) {
+                showAlert('❌ 导出失败：' + e.message, 'error');
+            }
+        }
+
+        /**
+         * 导入数据备份
+         */
+        function importData(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var backupData = JSON.parse(e.target.result);
+                    
+                    // 验证数据格式
+                    if (!backupData.participants || !backupData.games) {
+                        throw new Error('数据格式不正确');
+                    }
+
+                    // 确认导入
+                    showConfirmDialog(
+                        '📥 确认导入数据',
+                        '导入将覆盖当前所有数据，是否继续？\n\n备份信息：\n参与者：' + backupData.participants.length + ' 人\n比赛记录：' + backupData.games.length + ' 场\n导出时间：' + (backupData.exportTime ? new Date(backupData.exportTime).toLocaleString() : '未知'),
+                        function() {
+                            participants = backupData.participants;
+                            games = backupData.games;
+                            saveData();
+                            updateParticipantsList();
+                            updateGamePlayerSelects();
+                            updateRanking();
+                            updateGameHistory();
+                            updateYearFilter();
+                            showAlert('📥 数据导入成功！', 'success');
+                        }
+                    );
+                } catch (e) {
+                    showAlert('❌ 导入失败：数据格式错误', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 清空文件选择
+            event.target.value = '';
+        }
+
+        /**
+         * 自动备份检查
+         */
+        function checkAutoBackup() {
+            try {
+                var lastBackup = localStorage.getItem('mahjong_backup_time');
+                if (!lastBackup) return;
+                
+                var lastBackupTime = new Date(lastBackup);
+                var daysSinceBackup = (new Date() - lastBackupTime) / (1000 * 60 * 60 * 24);
+                
+                if (daysSinceBackup >= 7 && (participants.length > 0 || games.length > 0)) {
+                    showAlert('💡 提示：数据已超过7天未备份，建议导出备份', 'success');
+                }
+            } catch (e) {
+                // 忽略错误
+            }
+        }
+
+        /**
+         * 显示提示信息
+         */
+        function showAlert(message, type) {
+            var alert = document.createElement('div');
+            alert.className = 'alert alert-' + type;
+            alert.textContent = message;
+            
+            var content = document.querySelector('.content');
+            content.insertBefore(alert, content.firstChild);
+            
+            // 自动移除提示
+            setTimeout(function() {
+                if (alert.parentNode) {
+                    alert.parentNode.removeChild(alert);
+                }
+            }, 4000);
+        }
+
+        // ==================== 页面初始化 ====================
+        
+        /**
+         * DOM加载完成后的初始化
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载保存的数据
+            loadData();
+            
+            // 初始化各个模块
+            updateParticipantsList();
+            updateYearFilter();
+            updateRanking();
+            updateGameHistory();
+            
+            // 设置默认日期为今天
+            var dateInput = document.getElementById('gameDate');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
+            
+            // 生成默认的4人比赛输入框
+            generateGamePlayerInputs();
+            updateGamePlayerSelects();
+            
+            // 绑定密码输入框回车事件
+            var passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        confirmPassword();
+                    }
+                });
+            }
+            
+            // 绑定清空数据按钮
+            var clearAllBtn = document.getElementById('clearAllBtn');
+            if (clearAllBtn) {
+                clearAllBtn.addEventListener('click', function() {
+                    showPasswordDialog(clearAllData);
+                });
+            }
+            
+            // 绑定参与者姓名输入框回车事件
+            var playerNameInput = document.getElementById('playerName');
+            if (playerNameInput) {
+                playerNameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addParticipant();
+                    }
+                });
+            }
+            
+            // 显示欢迎信息
+            if (participants.length === 0 && games.length === 0) {
+                showAlert('🎉 欢迎使用麻神理工比赛积分管理系统！请先添加参与者', 'success');
+            }
+            
+            // 检查自动备份提醒
+            setTimeout(checkAutoBackup, 2000);
+        });
+
+        // ==================== 键盘快捷键支持 ====================
+        document.addEventListener('keydown', function(e) {
+            // ESC键关闭弹窗
+            if (e.key === 'Escape') {
+                var passwordModal = document.getElementById('passwordModal');
+                var confirmModal = document.getElementById('confirmModal');
+                if (passwordModal.style.display === 'flex') {
+                    cancelPassword();
+                }
+                if (confirmModal.style.display === 'flex') {
+                    cancelDelete();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
