@@ -887,6 +887,70 @@
             }
         }
 
+        /* 积分输入框样式优化 */
+        .score-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-input-wrapper input {
+            flex: 1;
+            padding-right: 50px;
+        }
+
+        .toggle-sign-btn {
+            position: absolute;
+            right: 5px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease, background 0.3s ease;
+            height: calc(100% - 10px);
+            min-width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toggle-sign-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        @media (hover: none) {
+            .toggle-sign-btn:hover {
+                transform: none;
+                box-shadow: none;
+            }
+        }
+
+        .toggle-sign-btn:active {
+            transform: scale(0.95);
+        }
+
+        .toggle-sign-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .toggle-sign-btn {
+                padding: 6px 12px;
+                font-size: 18px;
+                min-width: 42px;
+            }
+            
+            .score-input-wrapper input {
+                padding-right: 55px;
+            }
+        }
+
         /* 横向滚动提示 */
         .table-wrapper::after {
             content: '← 左右滑动查看更多 →';
@@ -1107,6 +1171,80 @@
         var confirmCallback = null; // 确认对话框回调
         var confirmData = null;
 
+        // ==================== 积分输入辅助功能 ====================
+        
+        // 存储每个输入框的符号状态
+        var scoreSignStatus = {};
+        
+        /**
+         * 切换积分正负号
+         */
+        function toggleScoreSign(playerIndex) {
+            var scoreInput = document.getElementById('score' + playerIndex);
+            var signBtn = document.querySelector('#score' + playerIndex + ' + .toggle-sign-btn');
+            
+            if (!scoreInput || !signBtn) return;
+            
+            // 切换符号状态
+            if (!scoreSignStatus[playerIndex] || scoreSignStatus[playerIndex] === '+') {
+                scoreSignStatus[playerIndex] = '-';
+                signBtn.textContent = '-';
+                signBtn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+            } else {
+                scoreSignStatus[playerIndex] = '+';
+                signBtn.textContent = '+';
+                signBtn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            }
+            
+            // 聚焦到输入框
+            scoreInput.focus();
+        }
+        
+        /**
+         * 获取实际积分值（考虑正负号）
+         */
+        function getActualScore(playerIndex) {
+            var scoreInput = document.getElementById('score' + playerIndex);
+            if (!scoreInput || !scoreInput.value) return null;
+            
+            var value = Math.abs(parseInt(scoreInput.value));
+            var sign = scoreSignStatus[playerIndex] || '+';
+            
+            return sign === '-' ? -value : value;
+        }
+        
+        /**
+         * 重置所有符号状态
+         */
+        function resetSignStatus() {
+            scoreSignStatus = {};
+            // 重置所有按钮显示
+            for (var i = 1; i <= gamePlayerCount; i++) {
+                var btn = document.querySelector('#score' + i + ' + .toggle-sign-btn');
+                if (btn) {
+                    btn.textContent = '+';
+                    btn.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+                }
+            }
+        }
+        
+        /**
+         * 恢复符号状态
+         */
+        function restoreSignStatus() {
+            setTimeout(function() {
+                for (var i = 1; i <= gamePlayerCount; i++) {
+                    if (scoreSignStatus[i] === '-') {
+                        var btn = document.querySelector('#score' + i + ' + .toggle-sign-btn');
+                        if (btn) {
+                            btn.textContent = '-';
+                            btn.style.background = 'linear-gradient(135deg, #dc3545, #c82333)';
+                        }
+                    }
+                }
+            }, 100);
+        }
+
         // ==================== 动态玩家管理 ====================
         
         /**
@@ -1118,6 +1256,7 @@
                 updatePlayerCount();
                 generateGamePlayerInputs();
                 updateGamePlayerSelects();
+                // 保持已有的符号状态
             } else {
                 showAlert('⚠️ 最多支持8位玩家参与比赛', 'error');
             }
@@ -1128,10 +1267,14 @@
          */
         function removeGamePlayer() {
             if (gamePlayerCount > 4) {
+                // 清除被移除玩家的符号状态
+                delete scoreSignStatus[gamePlayerCount];
                 gamePlayerCount--;
                 updatePlayerCount();
                 generateGamePlayerInputs();
                 updateGamePlayerSelects();
+                // 恢复已有的符号状态
+                restoreSignStatus();
             } else {
                 showAlert('⚠️ 至少需要4位玩家参与比赛', 'error');
             }
@@ -1159,12 +1302,31 @@
             for (var i = 1; i <= gamePlayerCount; i++) {
                 var playerDiv = document.createElement('div');
                 playerDiv.className = 'form-group';
+                
+                // 使用number类型，配合正负切换按钮
+                var inputHtml = '<input type="number" id="score' + i + '" ' +
+                    'placeholder="输入数字" ' +
+                    'min="0" ' +
+                    'step="1" ' +
+                    'aria-label="玩家' + i + '积分">';
+                
+                // 添加正负切换按钮
+                var scoreControlHtml = 
+                    '<div class="score-input-wrapper">' +
+                        inputHtml +
+                        '<button type="button" class="toggle-sign-btn" onclick="toggleScoreSign(' + i + ')" aria-label="切换正负号">+</button>' +
+                    '</div>';
+                
                 playerDiv.innerHTML = 
                     '<label>🎯 玩家 ' + i + '</label>' +
                     '<select id="player' + i + '" aria-label="选择玩家' + i + '"></select>' +
-                    '<input type="number" id="score' + i + '" placeholder="输入积分" step="1" aria-label="玩家' + i + '积分">';
+                    scoreControlHtml;
+                    
                 container.appendChild(playerDiv);
             }
+            
+            // 恢复已有的符号状态
+            restoreSignStatus();
         }
 
         /**
@@ -1478,14 +1640,10 @@
                     return;
                 }
                 
-                var score = parseInt(scoreInput);
+                // 使用getActualScore获取考虑正负号的实际分数
+                var score = getActualScore(i);
                 
-                if (isNaN(score)) {
-                    showAlert('🔢 玩家 ' + i + ' 的积分必须是整数', 'error');
-                    return;
-                }
-                
-                if (score !== parseFloat(scoreInput)) {
+                if (score === null || isNaN(score)) {
                     showAlert('🔢 玩家 ' + i + ' 的积分必须是整数', 'error');
                     return;
                 }
@@ -1535,6 +1693,9 @@
                 document.getElementById('player' + i).value = '';
                 document.getElementById('score' + i).value = '';
             }
+            
+            // 重置符号状态
+            resetSignStatus();
             
             saveData();
             updateParticipantsList();
@@ -1872,6 +2033,7 @@
             // 生成默认的4人比赛输入框
             generateGamePlayerInputs();
             updateGamePlayerSelects();
+            resetSignStatus();
             
             // 绑定密码输入框回车事件
             var passwordInput = document.getElementById('passwordInput');
